@@ -32,18 +32,42 @@ def filter(cpt):
             else:
                 evidenceArr[i] = False
         # run filter for every row
-        filterAlgo(a, b, c, d, f, evidenceArr)
-
+        print(filterAlgo(a, b, c, d, f, evidenceArr))
 
 def filterAlgo(a, b, c, d, f, evidenceArr):
+    #0.5, 0.5
     x0 = {True: a, False: 1 - a}
-    probXt1 = {True: b, False: 1 - b}
-    probXt2 = {True: c, False: 1 - c}
+    #0.7, 0.3
+    XtCPT = {True: b, False: c}
 
-    probEt1 = {True: d, False: 1 - d}
-    probEt2 = {True: f, False: 1 - f}
-    #set xT to inital x0
+    #0.9, 0.2
+    EtCPT = {True: d, False: f}
+
+    # #set xT to inital x0
     xT = x0
+
+    for evidence in evidenceArr:
+        #<0.7, 0.3> * 0.5
+        vecX1_givenX0timesX0 = {True: (XtCPT[True] * xT[True]), False: (XtCPT[False] * xT[False])}
+        #<0.3, 0.7> * 0.5
+        vecX1_givenNotX0timesNotX0 = {True: XtCPT[False] * xT[False], False: XtCPT[True] * xT[False]}
+        #<0.35 + 0.15, 0.15 +0.35>
+        prob_X1givenX0timesX0 = {True: vecX1_givenX0timesX0[True] + vecX1_givenNotX0timesNotX0[True], False: vecX1_givenX0timesX0[False] + 
+                                vecX1_givenNotX0timesNotX0[False]}
+        #<0.9, 0.2) * <0.5, 0.5>
+        tempProbX1_givenE1 = {True: EtCPT[True] * prob_X1givenX0timesX0[True] , False: EtCPT[False] * prob_X1givenX0timesX0[False]}
+
+        #0.45 + 0.1
+        alpha = tempProbX1_givenE1[True] + tempProbX1_givenE1[False]
+        probX1_givenE1 = {True: tempProbX1_givenE1[True] * (1/ alpha), False: tempProbX1_givenE1[False] * (1/ alpha)}
+        xT = probX1_givenE1
+
+        print(vecX1_givenX0timesX0)
+        print(vecX1_givenNotX0timesNotX0)
+        print(prob_X1givenX0timesX0)
+        print(tempProbX1_givenE1)
+        print(probX1_givenE1)
+    return probX1_givenE1
 
 while True:
     if len(sys.argv) == 2:
@@ -55,5 +79,3 @@ fileName = "test.txt"
 # fileName = sys.argv[1]
 cpt = readTxt(fileName)
 filter(cpt)
-
-
